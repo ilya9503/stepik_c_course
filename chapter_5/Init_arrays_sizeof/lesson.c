@@ -4,7 +4,18 @@
 
 int main(void)
 {
-    int marks[TOTAL_MARKS];
+    // Инициализация массива. = не присваивание, а инициализация
+    int marks[TOTAL_MARKS] = {1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    /* 
+        Остальные эл-ты проинициализируются как 0.
+        Если не проинициализировать, то переменные принимают шумовые зн-я
+    */
+    int marks_1[TOTAL_MARKS] = {1, 2, 3};
+
+    // Размер массива определится при инициализации
+    int cords[] = {1, 2, 4};
+
     marks[2] = 4;       // 3-ий элемент массива
     marks[0] = 2 * 3;   // 1-ый элемент массива
     marks[12] = 7 - 2;
@@ -26,7 +37,9 @@ int main(void)
     // Определим размер массива marks в байтах. size_t - unsigned integral type
     size_t bytes_marks = sizeof(marks);
     // Вычислим размер массива в элементах типа int
+    // *marks эквивалентно marks[0]
     size_t size_marks = sizeof(marks) / sizeof(marks[0]);
+    
     printf("%zu\n", size_marks);
 
 
