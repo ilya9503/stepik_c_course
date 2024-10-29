@@ -3,19 +3,17 @@
 int main(void)
 {
     int ar[10] = {0};
-    int value;
+    int n = sizeof(ar) / sizeof(*ar);
 
-    for ( int i = 0; i < sizeof(ar) / sizeof(*ar); ++i) {
-
+    for ( int i = 0; i < n; ++i) {
         scanf("%d ", &ar[i]);
+    }
 
-//        *(ar + i) = value;
-
-        if((*(ar + i) >= 0) && (*(ar + i) % 2 != 0)) {
+    for (int i = 0; i < n; ++i) {
+        if(ar[i] % 2 != 0 && ar[i] >= 0) {
             printf("1");
-            return 0;
+            return 0;           
         }
-
     }
 
     printf("0");
