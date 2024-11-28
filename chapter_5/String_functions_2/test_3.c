@@ -33,9 +33,8 @@ int main(void)
     char *ptr;
 
     for(int i = 0; i < num; ++i) {
-        if(i == 0) {
+        if(i == 0)
             ptr = strchr(str, ':');   // ищем начало
-        }
         else
             ptr = strchr(ptr, ';'); // ищем ;
         if(ptr != NULL) {
