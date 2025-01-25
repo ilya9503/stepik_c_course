@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>     // var function
 #include <limits.h>
-#define INF INT_MAX     // Используем максимально возможное значение для расстояний
+#define INF INT_MAX  // Используем максимально возможное значение для расстояний
 
 enum {name_length=50, total_links=50, max_path_station=100, max_stations = 10};
 
@@ -17,7 +17,7 @@ typedef struct tag_station {
 
 // Структура данных для очереди
 typedef struct Queue {
-    char st_names[max_stations][name_length];
+    STATION* path[max_path_station];    // массив указателей из станций
     int front, rear;
 } Queue;
 
@@ -25,16 +25,12 @@ void initQueue(Queue *q);               // Инициализация очере
 int isEmpty(Queue *q);                  // Проверка на пустоту
 int isFull(Queue *q);                   // Проверка на полноту
 void enqueue(Queue *q, STATION* st);    // Добавление элемента в очередь
-char* dequeue(Queue *q);                // Удаление элемента из очереди
-char* front(Queue *q);                  // Просмотр элемента в начале очереди
+STATION dequeue(Queue *q);                // Удаление элемента из очереди
+STATION peek(Queue *q);                  // Просмотр элемента в начале очереди
 
 void set_station_links(STATION* st, int count_links, ...);
 void show(STATION *st);
 void find_path(STATION* from, STATION* to, STATION *path[], int* count_st);
-
-
-
-
 
 int main(void)
 {
@@ -69,109 +65,94 @@ int main(void)
 
     STATION* path[max_path_station];
     int count_st = 0;
-
     path[0] = &st[0];
     path[1] = &st[1];
     path[2] = &st[2];
     path[3] = &st[3];
-    Queue q;
-    initQueue(&q);
-    enqueue(&q, path[0]);
-    enqueue(&q, path[1]);
-    enqueue(&q, path[2]);
-    enqueue(&q, path[3]);
-    printf("Элемент в начале очереди: %s\n", front(&q));
-    printf("Удален элемент: %s\n", dequeue(&q));
-    printf("Элемент в начале очереди: %s\n", front(&q));
-    printf("Удален элемент: %s\n", dequeue(&q));
-    printf("Элемент в начале очереди: %s\n", front(&q));
+    find_path(&st[0], &st[9], path, &count_st);
 
-/*
-    enqueue(&q, path[1]);
-    enqueue(&q, path[2]);
-    enqueue(&q, path[3]);
-    
-        Для примера ищем кратчайший маршрут от 1 станции до 6
-        На выходе должны получить 1 3 6
-     
-    //find_path(&st[0], &st[5], path, &count_st);
+    for(int i = 0;i < count_st;++i)
+        printf("[%s] ", path[i]->name);
 
-    for (int i = 0; i < 10; ++i)
-        printf("[%s] ", st[i].name);
-*/
-    // Проверка очереди
+
+
     //__ASSERT_TESTS__ // макроопределение для тестирования (не убирать и должно идти непосредственно перед return 0)
     return 0;
 }
 
-
-
 // Инициализация очереди
-void initQueue(Queue *q) {
+void initQueue(Queue *q)
+{
     q->front = -1;  // индекс начала очереди
     q->rear = -1;   // индекс конца очедери
 }
 
 // Проверка на пустоту
-int isEmpty(Queue *q) {
-    return q->front == -1;
+int isEmpty(Queue *q)
+{
+    int res = 0;    // не пуста
+    if(q->front == -1)
+        res = 1;    // пуста
+    return res;
 }
 
 // Проверка на полноту
-int isFull(Queue *q) {
-    return q->rear == max_stations - 1;
+int isFull(Queue *q)
+{
+    int res = 0;    // не полна
+    if(q->rear == max_path_station - 1)
+        res = 1;    // полна
+    return res;
 }
 
 // Добавление элемента в очередь
-void enqueue(Queue *q, STATION* st) {
+void enqueue(Queue *q, STATION* st)
+{
     if (isFull(q)) {
         printf("Queue is full\n");
         return;
     }
     if (isEmpty(q))
-        q->front = 0;
+        q->front = 0;   // обнуляем указатель начала очереди
     /*
         1. Инкрементируем индекс конца очереди
         2. Добавляем данные в ячейку с индексом конца очереди
     */
-    q->rear++;
-    strncpy(q->st_names[q->rear], st->name, name_length);
+    q->rear++;      // постфикс, на текущей итерации запишет old, потом инкрементирует
+    q->path[q->rear] = st;
 }
 
-// Удаление элемента из очереди
-char* dequeue(Queue *q) {
-    char* res;
-    char temp[name_length] = "Queue is empty\n";
-    res = temp;
+// Удаление 1-ого элемента очереди
+STATION dequeue(Queue *q)
+{
+    STATION old = {.name = "Empty"};
     if (isEmpty(q)) {
         printf("Queue is empty\n");
-        return res;
+        return old;
     }
-    // Запоминаем удаляемый элемент из начала очереди
-    strncpy(res, q->st_names[q->front], name_length);
-    // Если в очереди один элемент
-    if (q->front == q->rear) {  
+    old = *q->path[q->front];    // запоминаем удаляемый элемент
+    //old = q->path[q->front]->name;
+    if (q->front == q->rear)  // Если в очереди один элемент
         q->front = q->rear = -1;
-    }
     else
         q->front++;
-
-    return res;
+    return old;     // возвращаем удаляемый элемент
 }
 
 // Просмотр элемента в начале очереди
-char* front(Queue *q) {
-    char* res = "Queue is empty\n";
+STATION peek(Queue *q)
+{
+    STATION temp = {.name = "Empty"};
     if (isEmpty(q)) {
         printf("Queue is empty\n");
-        return res;
+        return temp;
     }
-    return q->st_names[q->front];
+    //temp = *q->path[q->front];
+    //q->path[q->front]->name
+    return *q->path[q->front];
 }
 
-/*
-    Установка взаимосвязей между станциями
-*/
+/*  Установка взаимосвязей между станциями  */
 void set_station_links(STATION* st, int count_links, ...)
 {
     va_list arg;                      // указатель на параметр
@@ -183,10 +164,9 @@ void set_station_links(STATION* st, int count_links, ...)
     va_end(arg);    
 }
 
-/*
-    Вывод информации о соединениях между станциями
-*/
-void show(STATION *st){
+/*  Вывод информации о соединениях между станциями  */
+void show(STATION *st)
+{
   printf("   Станция   || Соединена с\n");   
   printf("====================================\n");
   for(int i = 0; i < 10; ++i){
@@ -200,18 +180,31 @@ void show(STATION *st){
   }
 }
 
-/*
-    Функция поиска кратчайшего маршрута от одной станции до другой
-        from - начальная станция
-        to - конечная станция
-        path - массив указателей из станций метро кратчайшего маршрута (включая станции from и to)
-        count_st - указатель на целочисленную переменную, хранящую общее число станций в найденном маршруте
-*/
+int get_number(STATION* st)
+{
+    char* ptr = strchr(st->name, '#');
+    ++ptr;
+    int res = atoi(ptr);
+    return res;
+}
+
+int get_number_ch(char* ch)
+{
+    char* ptr = strchr(ch, '#');
+    ++ptr;
+    int res = atoi(ptr);
+    return res;
+}
+
 void find_path(STATION* from, STATION* to, STATION *path[], int* count_st)
 {
-    int distance[max_stations];  // Массив для хранения расстояний от start до каждой вершины
-    int parent[max_stations];   // Массив для отслеживания родительских вершин
-    
+    STATION distance[max_stations];   // Массив для хранения расстояний от start до каждой вершины
+    STATION parent[max_stations];     // Массив для отслеживания родительских вершин
+
+    int from_int = get_number(from);
+    int to_int = get_number(to);
+
+/*
     for (int i = 0; i < max_stations; ++i) {
         distance[i] = INF;  // Инициализируем расстояния как бесконечность
         parent[i] = -1;  // Инициализируем родителей как -1 (отсутствие родителей)
@@ -219,77 +212,67 @@ void find_path(STATION* from, STATION* to, STATION *path[], int* count_st)
 
     Queue q;
     initQueue(&q);
+    // 1. Добавляем стартовую вершину s
     enqueue(&q, from);
+    // 2. Стартовая вершина посещена
     from->fl_reserved = 1;
-    distance[0] = 0;
-
+    distance[from_int] = 0;
+    // 3. Массив для восстановления пути - path
     while (! isEmpty(&q)) {
-        char* current = dequeue(&q);
+        //int current_int = get_number_ch(dequeue(&q));
+        STATION current = dequeue(&q);
 
         // Если мы достигли целевой вершины
-        if (strcmp(current, to->name)) {
+        if (!strcmp(current.name, to->name)) {
             printf("Кратчайший путь от %s до %s:\n", from->name, to->name);
-        }
-
-    }
-    
-
-}
-/*
-// Алгоритм поиска в ширину для нахождения кратчайшего пути
-void bfs_shortest_path(Graph *g, int start, int goal) {
-    bool visited[MAX_VERTICES] = {false};  // Массив для отслеживания посещённых вершин
-    int distance[MAX_VERTICES];  // Массив для хранения расстояний от start до каждой вершины
-    int parent[MAX_VERTICES];  // Массив для отслеживания родительских вершин
-
-    for (int i = 0; i < MAX_VERTICES; i++) {
-        distance[i] = INF;  // Инициализируем расстояния как бесконечность
-        parent[i] = -1;  // Инициализируем родителей как -1 (отсутствие родителей)
-    }
-
-    Queue q;
-    initQueue(&q);
-
-    // Начальная вершина
-    enqueue(&q, start);
-    visited[start] = true;
-    distance[start] = 0;
-
-    while (!isEmpty(&q)) {
-        int current = dequeue(&q);
-
-        // Если мы достигли целевой вершины
-        if (current == goal) {
-            printf("Кратчайший путь от %c до %c:\n", start + 'A', goal + 'A');
-            int path[MAX_VERTICES];
+            //int path[max_stations];
             int pathLength = 0;
-            int crawl = goal;
-
-            // Восстанавливаем путь
+            STATION* crawl = to;
+            // Восстанавливаем путь ХЗ
+            
             while (crawl != -1) {
                 path[pathLength++] = crawl;
-                crawl = parent[crawl];
+                |crawl = parent[crawl];
             }
-
-            // Выводим путь в обратном порядке
-            for (int i = pathLength - 1; i >= 0; i--) {
-                printf("%c ", path[i] + 'A');
-            }
-            printf("\n");
-            return;
-        }
-
-        // Проверяем всех соседей текущей вершины
-        for (int i = 0; i < MAX_VERTICES; i++) {
-            if (g->adjMatrix[current][i] == 1 && !visited[i]) {
-                visited[i] = true;
-                distance[i] = distance[current] + 1;
-                parent[i] = current;
-                enqueue(&q, i);
-            }
+            
         }
     }
 
-    printf("Путь не найден.\n");
-}
+
+    //printf("start %d, end %d\n", num_start, num_end);
+    // инкрементировать указатель STATION*
+    //from->links[0];     // связи станции с другими станциями (указатель на структуру)
+    //from->count_links;  // кол-во связей
+    //from->fl_reserved;  // флаг, что станция зарезервирована
+    //from->name;         // имя станции
+    
+    //q.front;
+    //q.rear;
+    //q.path[0]->name;   // path - массив указателей на станции (очередь)
+
+    enqueue(&q, path[0]);
+    enqueue(&q, path[1]);
+    enqueue(&q, path[2]);
+    enqueue(&q, path[3]);
+
+    for (int i = q.front; i <= q.rear; ++i)
+        printf("%s ", q.path[i]->name);
+    printf("\n");
+    
+    printf("Элемент в начале очереди: %s\n", peek(&q));
+    printf("Удален элемент: %s\n", dequeue(&q));
+    printf("Элемент в начале очереди: %s\n", peek(&q));
+    printf("Удален элемент: %s\n", dequeue(&q));
+    printf("Элемент в начале очереди: %s\n", peek(&q));
+    printf("Удален элемент: %s\n", dequeue(&q));
+    printf("Элемент в начале очереди: %s\n", peek(&q));
+    printf("Удален элемент: %s\n", dequeue(&q));
+    printf("Элемент в начале очереди: %s\n", peek(&q));
+
+    if(q.front != q.rear)
+        for (int i = q.front; i <= q.rear; ++i)
+            printf("%s ", q.path[i]->name);
+
+    //q.path[2] = path[2];
 */
+}
