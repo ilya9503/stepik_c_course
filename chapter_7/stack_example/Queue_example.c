@@ -80,6 +80,10 @@ int main() {
     enqueue(&q, 50);
 
     printf("Элемент в начале очереди: %d\n", front(&q));
+    printf("Удален элемент: %d\n", dequeue(&q));
+    printf("Удален элемент: %d\n", dequeue(&q));
+    printf("Удален элемент: %d\n", dequeue(&q));
+    printf("Элемент в начале очереди: %d\n", front(&q));
 
     return 0;
 }
