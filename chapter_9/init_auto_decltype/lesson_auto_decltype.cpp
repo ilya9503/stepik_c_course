@@ -8,6 +8,7 @@
 
     auto - переменные вычисляемого типа
     decltype - полный учет идентичности типа переменной (слова const, ссылки и тд)
+    decltype is a keyword in C++ that is used to determine the type of an expression at compile time.
 
 */
 #include <iostream>
